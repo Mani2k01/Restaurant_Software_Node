@@ -41,7 +41,7 @@ app.use(
   })
 );
 
-const PORT = 5000;
+const PORT = process.env.NODE_PORT ;
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
