@@ -131,7 +131,7 @@ app.route("/order_entry")
         // console.log("Fetched food items:", foods);
         console.log("order id after confirm order, fetched from session : ", req.session.order_id);
         console.log("order id after confirm order : ", order_id);
-        res.render("order_entry", {
+        res.render("Order_Entry", {
             order: table_ctx,
             foods,
             active_order,
@@ -255,7 +255,7 @@ app.route("/parcel")
 
         const parcel = req.session.parcel_order || null;
         console.log(" fetched parcel order session:", parcel);
-        res.render("Parcel", {
+        res.render("parcel", {
             foods,
             parcel
         });
@@ -405,7 +405,7 @@ app.get("/kitchen", async (req, res) => {
 
     console.log("fetched_orders:", fetched_orders);
 
-    res.render("kitchen", {
+    res.render("Kitchen", {
         orders: fetched_orders
     });
 
