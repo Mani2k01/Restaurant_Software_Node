@@ -12,7 +12,22 @@ const pdfBill = require("./bill_pdf");
 require('dotenv').config();
 
 
+// GLOBAL ERROR LOGGING
+process.on("uncaughtException", (err) => {
+  console.error("🔥 UNCAUGHT EXCEPTION:", err);
+});
+
+process.on("unhandledRejection", (err) => {
+  console.error("🔥 UNHANDLED PROMISE REJECTION:", err);
+});
+
 const app = express();
+
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+
 const db = new Database();
 const billPDF = new pdfBill();
 app.set("view engine", "ejs");
