@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table Management</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+    <style>
+         :root {
+            --green: #22c55e;
+            --orange: #f59e0b;
+            --red: #ef4444;
+            --blue: #3b82f6;
+            --bg: #020617;
+            --card: #111827;
+            --text: #e5e7eb;
+            --muted: #9ca3af;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #020617, #0f172a);
+            color: var(--text);
+        }
+        
+        .header {
+            padding: 18px 26px;
+            font-size: 20px;
+            font-weight: 600;
+            border-bottom: 1px solid #1f2937;
+        }
+        
+        .grid {
+            padding: 28px;
+            display: grid;
+            gap: 22px;
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        @media(min-width:768px) {
+            .grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        @media(min-width:1200px) {
+            .grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+        
+        .table-card {
+            background: var(--card);
+            border-radius: 18px;
+            padding: 14px;
+            box-shadow: 0 16px 35px rgba(0, 0, 0, .45);
+            position: relative;
+            transition: .25s ease;
+        }
+        /* STATUS BORDER */
+        
+        .table-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 18px;
+            border: 3px solid transparent;
+        }
+        
+        .table-card.available::before {
+            border-color: var(--green);
+        }
+        
+        .table-card.yet::before {
+            border-color: var(--orange);
+        }
+        
+        .table-card.occupied::before {
+            border-color: var(--red);
+        }
+        
+        .table-card.cleaning::before {
+            border-color: var(--blue);
+        }
+        /* PERSON SELECT */
+        
+        .person-select {
+            width: 100%;
+            background: #020617;
+            color: white;
+            border: 1px solid #1f2937;
+            border-radius: 10px;
+            padding: 6px 8px;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+        /* IMAGE */
+        
+        .table-img {
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #020617;
+            border-radius: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .table-img i {
+            font-size: 40px;
+            color: #9ca3af;
+        }
+        
+        .table-no {
+            font-size: 17px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .status-text {
+            font-size: 13px;
+            text-align: center;
+            margin-top: 4px;
+        }
+        
+        .table-card.available .status-text {
+            color: var(--green);
+        }
+        
+        .table-card.yet .status-text {
+            color: var(--orange);
+        }
+        
+        .table-card.occupied .status-text {
+            color: var(--red);
+        }
+        
+        .table-card.cleaning .status-text {
+            color: var(--blue);
+        }
+        
+        .locked {
+            opacity: .6;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">🍽 Table Management</div>
+    <div class="grid" id="tables"></div>
+
+    <script>
+        const tables = [{
+            id: 1,
+            state: 'available',
+            persons: 0
+        }, {
+            id: 2,
+            state: 'available',
+            persons: 0
+        }, {
+            id: 3,
+            state: 'yet',
+            persons: 2
+        }, {
+            id: 4,
+            state: 'occupied',
+            persons: 4
+        }, {
+            id: 5,
+            state: 'cleaning',
+            persons: 0
+        }, {
+            id: 6,
+            state: 'available',
+            persons: 0
+        }, {
+            id: 7,
+            state: 'yet',
+            persons: 3
+        }, {
+            id: 8,
+            state: 'occupied',
+            persons: 5
+        }, {
+            id: 9,
+            state: 'available',
+            persons: 0
+        }, {
+            id: 10,
+            state: 'available',
+            persons: 0
+        }];
+
+
+        const stateText = {
+            available: 'Available',
+            yet: 'Yet to order',
+            occupied: 'Occupied',
+            cleaning: 'Cleaning'
+        };
+
+        function renderTables() {
+            const wrap = document.getElementById("tables");
+            wrap.innerHTML = "";
+
+            tables.forEach((t, index) => {
+                        const locked = (t.state === 'occupied' || t.state === 'cleaning');
+
+                        wrap.innerHTML += `
+      <div class="table-card ${t.state}">
+        <select class="person-select ${locked ? 'locked':''}"
+          onchange="updatePersons(${index}, this.value)">
+          ${[...Array(11).keys()].map(n =>
+            `<option value="${n}" ${n===t.persons?'selected':''}>Persons: ${n}</option>`
+          ).join("")}
+        </select>
+
+        <div class="table-img">
+          <i class="fa-solid fa-chair"></i>
+        </div>
+
+        <div class="table-no">Table ${t.id}</div>
+        <div class="status-text">${stateText[t.state]}</div>
+      </div>
+    `;
+  });
+}
+
+function updatePersons(index,value){
+  const persons = parseInt(value);
+  const table = tables[index];
+
+  // Only green & orange allowed
+  if(table.state === 'occupied' || table.state === 'cleaning'){
+    return;
+  }
+
+  table.persons = persons;
+
+  if(persons === 0){
+    table.state = 'available';
+  } else {
+    table.state = 'yet';
+  }
+
+  renderTables();
+}
+
+renderTables();
+    </script>
+
+</body>
+
+</html>

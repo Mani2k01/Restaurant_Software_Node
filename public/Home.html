@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Control Panel</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+    <style>
+         :root {
+            --bg: #f4f6f9;
+            --surface: #ffffff;
+            --border: #e5e7eb;
+            --text: #111827;
+            --muted: #6b7280;
+            --green: #22c55e;
+            --blue: #3b82f6;
+            --orange: #f59e0b;
+            --shadow: 0 10px 22px rgba(0, 0, 0, .08);
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        /* HEADER */
+        
+        .header {
+            padding: 20px 28px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .header-title {
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        .header-sub {
+            font-size: 14px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+        .header-icon {
+            position: absolute;
+            top: 20px;
+            right: 28px;
+            color: var(--muted);
+        }
+
+
+        .menu{
+            position:absolute;
+            top:65px;
+            right:28px;
+            background:white;
+            border:1px solid var(--border);
+            border-radius:12px;
+            box-shadow:var(--shadow);
+            width:180px;
+            display:none;
+            overflow:hidden;
+        }
+
+        .menu div{
+            padding:12px 16px;
+            font-size:14px;
+            cursor:pointer;
+            display:flex;
+            align-items:center;
+            gap:8px;
+        }
+
+        .menu div:hover{
+            background:#f3f4f6;
+        }
+
+
+        /* CONTAINER */
+        
+        .container {
+            padding: 40px 28px;
+        }
+        /* GRID */
+        
+        .grid {
+            display: grid;
+            gap: 26px;
+            grid-template-columns: 1fr;
+        }
+        
+        @media(min-width:1024px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        /* CARD */
+        
+        .card {
+            background: var(--surface);
+            border-radius: 18px;
+            padding: 28px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: .25s ease;
+            border: 1px solid var(--border);
+        }
+        
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 34px rgba(0, 0, 0, .12);
+        }
+        /* ICON */
+        
+        .icon {
+            width: 54px;
+            height: 54px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 18px;
+        }
+        
+        .icon.green {
+            background: #dcfce7;
+            color: var(--green);
+        }
+        
+        .icon.orange {
+            background: #ffedd5;
+            color: var(--orange);
+        }
+        
+        .icon.blue {
+            background: #dbeafe;
+            color: var(--blue);
+        }
+        
+        .icon.gray {
+            background: #e5e7eb;
+            color: #374151;
+        }
+        /* TEXT */
+        
+        .title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .desc {
+            font-size: 14px;
+            color: var(--muted);
+            margin-top: 8px;
+            line-height: 1.6;
+        }
+        
+        .enter {
+            margin-top: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--blue);
+        }
+        /* FOOTER */
+        
+        .footer {
+            text-align: center;
+            padding: 22px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="header">
+        <div class="header-title">Restaurant Control Panel</div>
+        <div class="header-sub">Choose operational role</div>
+        <div class="header-icon" onclick="toggleMenu()">
+            <i class="fa-regular fa-2x fa-circle-user"></i>
+        </div>
+
+        <div class="menu" id="menu">
+            <div onclick="go('add_table')">
+                <i class="fa-solid fa-table"></i> Add Table
+            </div>
+            <div onclick="go('add_food')">
+                <i class="fa-solid fa-burger"></i> Add Food Item
+            </div>
+        </div>
+    </div>
+
+
+    <div class="container">
+        <div class="grid">
+
+            <div class="card" onclick="go('table')">
+                <div class="icon green"><i class="fa-solid fa-chair"></i></div>
+                <div class="title">Table Entry</div>
+                <div class="desc">
+                    Manage table seating, dine-in orders, repeat orders, and billing.
+                </div>
+                <div class="enter">Enter →</div>
+            </div>
+
+            <div class="card" onclick="go('parcel')">
+                <div class="icon orange"><i class="fa-solid fa-box"></i></div>
+                <div class="title">Parcel Entry</div>
+                <div class="desc">
+                    Take takeaway orders, capture customer details, manage payments.
+                </div>
+                <div class="enter">Enter →</div>
+            </div>
+
+            <div class="card" onclick="go('kitchen')">
+                <div class="icon blue"><i class="fa-solid fa-fire-burner"></i></div>
+                <div class="title">Kitchen</div>
+                <div class="desc">
+                    Accept orders, prepare food, update cooking status in real-time.
+                </div>
+                <div class="enter">Enter →</div>
+            </div>
+
+            <div class="card" onclick="go('distribution')">
+                <div class="icon gray"><i class="fa-solid fa-truck-fast"></i></div>
+                <div class="title">Distribution</div>
+                <div class="desc">
+                    Serve table orders or dispatch parcel orders efficiently.
+                </div>
+                <div class="enter">Enter →</div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="footer">
+        VEDSP Inventive Private Limited © 2026 Restaurant Management System
+    </div>
+
+    <script>
+        function go(role) {
+            // hook backend routing later
+            // alert("Navigate to " + role + " module");
+            if (role == 'table') {
+                window.location.href = "/table_order"
+            }
+            if (role == 'parcel') {
+                window.location.href = "/parcel"
+            }
+            if (role == 'kitchen') {
+                window.location.href = "/kitchen"
+            }
+            if (role == 'distribution') {
+                window.location.href = "/distribution"
+            }
+            if (role == 'add_food') {
+                window.location.href = "/add_food"
+            }
+            if (role == 'add_table') {
+                window.location.href = "/add_table"
+            }
+
+        }
+        function toggleMenu(){
+            const menu = document.getElementById("menu");
+            menu.style.display = menu.style.display === "block" ? "none" : "block";
+        }
+
+        function openPage(page){
+            window.location.href = page;
+        }
+
+        // close menu if clicked outside
+        document.addEventListener("click",function(e){
+            const menu = document.getElementById("menu");
+            const icon = document.querySelector(".header-icon");
+
+            if(!menu.contains(e.target) && !icon.contains(e.target)){
+                menu.style.display="none";
+            }
+        });
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Distribution</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #f4f6f9;
+            --surface: #ffffff;
+            --border: #e5e7eb;
+            --text: #111827;
+            --muted: #6b7280;
+            --green: #22c55e;
+            --blue: #3b82f6;
+            --shadow: 0 6px 14px rgba(0, 0, 0, .08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 16px 20px;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .grid {
+            padding: 20px;
+            display: grid;
+            gap: 18px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        }
+
+        .dist-card {
+            background: var(--surface);
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+            padding: 14px;
+            cursor: pointer;
+            transition: transform .15s ease;
+        }
+
+        .dist-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .dist-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .hint {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .dist-drawer {
+            position: fixed;
+            top: 0;
+            right: -420px;
+            width: 420px;
+            height: 100vh;
+            background: #fff;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, .15);
+            transition: .35s ease;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dist-drawer.open {
+            right: 0;
+        }
+
+        .drawer-header {
+            padding: 16px;
+            background: #111827;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .drawer-header button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .drawer-body {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .drawer-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .drawer-item.served {
+            background: #ecfdf5;
+        }
+
+        .drawer-item button {
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            background: var(--blue);
+            color: white;
+        }
+
+        .drawer-item.cancelled {
+            background: #fef2f2;
+            opacity: 0.8;
+        }
+
+        .drawer-item.cancelled strong {
+            color: #b91c1c;
+        }
+
+        .drawer-item.cancelled .status {
+            color: #dc2626;
+            font-weight: 600;
+        }
+
+        .status {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 22px;
+            font-size: 13px;
+            color: var(--muted);
+            background: var(--surface);
+        }
+
+        main {
+            flex: 1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">🚚 Distribution</div>
+
+    <main>
+
+        <div class="grid">
+
+            <% orders.forEach(order=> { %>
+
+                <div class="dist-card" data-order-id="<%= order.order_id %>">
+
+                    <div class="dist-top">
+
+                        <strong>Order #<%= order.order_id %></strong>
+
+                        <% if(order.order_type==="TABLE" ){ %>
+                            <div class="badge">TABLE <%= order.table_id %>
+                            </div>
+
+                            <% } else if(order.order_type==="PARCEL" ){ %>
+                                <div class="badge">TAKEAWAY</div>
+
+                                <% } else if(order.order_type==="ONLINE" ){ %>
+                                    <div class="badge">ONLINE</div>
+                                    <% } %>
+
+                    </div>
+
+                    <div class="hint">
+                        <%= Object.keys(order.items || {}).length %> item(s)
+                    </div>
+
+                    <div class="hint">
+                        Status: <%= order.status %>
+                    </div>
+
+                </div>
+
+                <% }) %>
+
+        </div>
+
+
+        <div class="dist-drawer" id="drawer">
+
+            <div class="drawer-header">
+                <span id="drawerTitle"></span>
+                <button onclick="closeDrawer()">✕</button>
+            </div>
+
+            <div class="drawer-body" id="drawerBody"></div>
+
+        </div>
+
+    </main>
+
+    <div class="footer">
+        VEDSP Inventive Private Limited © 2025 Restaurant Management System
+    </div>
+
+
+    <script id="orders-data" type="application/json">
+<%- JSON.stringify(orders) %>
+</script>
+
+    <script>
+
+        const orders = JSON.parse(
+            document.getElementById("orders-data").textContent
+        );
+
+        let activeOrderId = null;
+
+        function openDrawer(orderId) {
+
+            activeOrderId = orderId;
+
+            const order = orders.find(o => o.order_id == orderId);
+            if (!order) return;
+
+            document.getElementById("drawerTitle").innerText =
+                `Order #${order.order_id} • ${order.order_type === 'TABLE' ? 'Table ' + order.table_id : 'Parcel'}`;
+
+            const body = document.getElementById("drawerBody");
+            body.innerHTML = "";
+
+
+            if (order.order_type === "ONLINE") {
+
+                body.innerHTML = `
+
+                    <div style="margin-bottom:12px">
+                    <strong>👤 Customer</strong>
+                    <div class="hint">${order.name}</div>
+                    </div>
+
+                    <div style="margin-bottom:12px">
+                    <strong>💰 Amount</strong>
+                    <div class="hint">₹ ${order.amount}</div>
+                    </div>
+
+                    <div style="margin-bottom:12px">
+                    <strong>📦 Order Items</strong>
+                    </div>
+                    `;
+
+                    Object.entries(order.items).forEach(([name, item]) => {
+
+                        body.innerHTML += `
+                            <div class="drawer-item">
+                            <div>
+                            <strong>${name}</strong> × ${item.qty}
+                            <div class="status">${item.status}</div>
+                            </div>
+                            </div>
+                            `;
+
+                    });
+
+
+                    if (order.status === "DISTRIBUTION") {
+
+                        body.innerHTML += `
+
+                            <div style="margin-top:16px">
+                            <strong>📍 Delivery Address</strong>
+                            <div class="hint">${order.address}</div>
+                            </div>
+
+                            <div style="margin-top:12px">
+
+                            <iframe
+                            width="100%"
+                            height="200"
+                            frameborder="0"
+                            style="border-radius:12px"
+                            src="https://www.google.com/maps?q=${encodeURIComponent(order.address)}&output=embed">
+                            </iframe>
+
+                            </div>
+
+                            <button style="
+                            margin-top:14px;
+                            width:100%;
+                            padding:12px;
+                            border:none;
+                            border-radius:10px;
+                            background:#22c55e;
+                            color:white;
+                            font-weight:600;
+                            cursor:pointer;
+                            ">
+                            🚚 Track Order
+                            </button>
+
+                            `;
+
+                    }
+
+                    document.getElementById("drawer").classList.add("open");
+                    return;
+
+            }
+
+
+            Object.entries(order.items).forEach(([name, item]) => {
+
+                let buttonHTML = "";
+                let rowClass = "";
+
+                if (item.status === "READY") {
+                    buttonHTML = `<button onclick="serveItem('${name}')">Serve</button>`;
+                }
+
+                if (item.status === "SERVED") rowClass = "served";
+                if (item.status === "CANCELLED") rowClass = "cancelled";
+
+                body.innerHTML += `
+
+                    <div class="drawer-item ${rowClass}">
+
+                    <div>
+                    <strong>${name}</strong> × ${item.qty}
+                    <div class="status">${item.status}</div>
+                    </div>
+
+                    ${buttonHTML}
+
+                    </div>
+
+                    `;
+
+            });
+
+            document.getElementById("drawer").classList.add("open");
+
+        }
+
+
+        function serveItem(itemName) {
+
+            fetch("/distribution/serve-item", {
+
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    order_id: activeOrderId,
+                    item_name: itemName
+                })
+
+            }).then(() => location.reload());
+
+        }
+
+        function closeDrawer() {
+            document.getElementById("drawer").classList.remove("open");
+        }
+
+        setInterval(() => {
+            fetch("/distribution")
+                .then(() => location.reload());
+        }, 10000);
+
+
+        document.querySelectorAll(".dist-card").forEach(card => {
+            card.addEventListener("click", () => {
+                openDrawer(Number(card.dataset.orderId));
+            });
+        });
+
+    </script>
+
+</body>
+
+</html>

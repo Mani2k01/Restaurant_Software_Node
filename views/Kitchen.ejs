@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitchen Dashboard</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #f4f6f9;
+            --surface: #ffffff;
+            --border: #e5e7eb;
+            --text: #111827;
+            --muted: #6b7280;
+            --green: #22c55e;
+            --orange: #f59e0b;
+            --blue: #3b82f6;
+            --shadow: 0 6px 14px rgba(0, 0, 0, .08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 16px 20px;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .grid {
+            padding: 20px;
+            display: grid;
+            gap: 18px;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        }
+
+        .order-card {
+            background: var(--surface);
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+            padding: 14px;
+            cursor: pointer;
+        }
+
+        .order-top {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .order-items-preview {
+            font-size: 13px;
+            color: #374151;
+        }
+
+        .order-items-preview div {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .more {
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .order-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+
+        .kds-drawer {
+            position: fixed;
+            top: 0;
+            right: -420px;
+            width: 420px;
+            height: 100vh;
+            background: #fff;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, .15);
+            transition: .35s ease;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .kds-drawer.open {
+            right: 0;
+        }
+
+        .drawer-header {
+            padding: 16px;
+            background: #111827;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .drawer-body {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .drawer-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .status {
+            font-size: 11px;
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        .ordered {
+            color: var(--muted);
+        }
+
+        .preparing {
+            color: var(--orange);
+        }
+
+        .distribution {
+            color: var(--green);
+        }
+
+        .cancelled {
+            color: #b91c1c;
+        }
+
+        .drawer-item button {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            background: var(--blue);
+            color: white;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 22px;
+            font-size: 13px;
+            color: var(--muted);
+            background: var(--surface);
+        }
+
+        main {
+            flex: 1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">👨‍🍳 Kitchen Dashboard</div>
+
+    <main>
+
+        <div class="grid">
+
+            <% orders.forEach(order=> { %>
+
+                <div class="order-card" data-order-id="<%= order.order_id %>">
+
+                    <div class="order-top">
+
+                        <strong>Order #<%= order.order_id %></strong>
+
+                        <% if(order.order_type==="TABLE" ){ %>
+                            <div class="badge">TABLE <%= order.table_id %>
+                            </div>
+                            <% } else if(order.order_type==="PARCEL" ){ %>
+                                <div class="badge">TAKEAWAY</div>
+                                <% } else if(order.order_type==="ONLINE" ){ %>
+                                    <div class="badge">ONLINE</div>
+                                    <% } %>
+
+                    </div>
+
+
+                    <div class="order-items-preview">
+
+                        <% const items=Object.entries(order.items || {}); items.slice(0,2).forEach(([name,item])=> {
+                            %>
+
+                            <div>
+                                <%= name %> × <%= item.qty %>
+                            </div>
+
+                            <% }) %>
+
+                                <% if(items.length> 2){ %>
+                                    <div class="more">+<%= items.length - 2 %> more items</div>
+                                    <% } %>
+
+                    </div>
+
+
+                    <div class="order-info">
+                        <span>
+                            <%= items.length %> Items
+                        </span>
+                        <span>₹<%= order.amount %></span>
+                    </div>
+
+                </div>
+
+                <% }) %>
+
+        </div>
+
+
+        <div class="kds-drawer" id="kdsDrawer">
+
+            <div class="drawer-header">
+                <span id="drawerOrderId"></span>
+                <button onclick="closeDrawer()">✕</button>
+            </div>
+
+            <div class="drawer-body" id="drawerItems"></div>
+
+        </div>
+
+    </main>
+
+
+    <div class="footer">
+        VEDSP Inventive Private Limited © 2025 Restaurant Management System
+    </div>
+
+
+    <script id="orders-data" type="application/json">
+<%- JSON.stringify(orders) %>
+</script>
+
+
+    <script>
+
+        const orders = JSON.parse(document.getElementById("orders-data").textContent);
+
+        function openDrawer(orderId) {
+
+            const order = orders.find(o => o.order_id === orderId);
+            if (!order) return;
+
+            document.getElementById("drawerOrderId").innerText = "Order #" + orderId;
+
+            const body = document.getElementById("drawerItems");
+            body.innerHTML = "";
+
+            Object.entries(order.items).forEach(([name, item]) => {
+
+                if (!item.status) item.status = "ORDERED";
+
+                if (item.status === "CANCELLED") {
+
+                    body.innerHTML += `
+<div class="drawer-item cancelled">
+<div>
+<strong>${name}</strong>
+<div class="status cancelled">CANCELLED</div>
+</div>
+</div>
+`;
+
+                    return;
+                }
+
+                let buttonText = "";
+                let showBtn = true;
+
+                if (item.status === "ORDERED") buttonText = "Prepare";
+                else if (item.status === "PREPARING") buttonText = "Send";
+                else showBtn = false;
+
+                body.innerHTML += `
+<div class="drawer-item">
+
+<div>
+<strong>${name}</strong> × ${item.qty}
+<div class="status ${item.status.toLowerCase()}">
+${item.status}
+</div>
+</div>
+
+${showBtn ? `
+<button onclick="handleItemAction(${orderId},'${name}')">
+${buttonText}
+</button>
+`: ""}
+
+</div>
+`;
+
+            });
+
+            document.getElementById("kdsDrawer").classList.add("open");
+
+        }
+
+
+        function handleItemAction(orderId, itemName) {
+
+            const order = orders.find(o => o.order_id === orderId);
+            if (!order) return;
+
+            const item = order.items[itemName];
+
+            if (item.status === "ORDERED") {
+                item.status = "PREPARING";
+            }
+            else if (item.status === "PREPARING") {
+
+                item.status = "distribution";
+
+                fetch("/kitchen/send-to-distribution", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        table_id: order.table_id,
+                        order_id: orderId,
+                        item_name: itemName,
+                        qty: item.qty
+                    })
+                }).then(() => {
+
+                    const allSent = Object.values(order.items)
+                        .every(i => i.status === "distribution");
+
+                    if (allSent) {
+
+                        document.querySelector(
+                            `.order-card[data-order-id="${orderId}"]`
+                        )?.remove();
+
+                        closeDrawer();
+
+                    } else {
+
+                        openDrawer(orderId);
+
+                    }
+
+                });
+
+            }
+
+            openDrawer(orderId);
+
+        }
+
+
+        function closeDrawer() {
+            document.getElementById("kdsDrawer").classList.remove("open");
+        }
+
+
+        document.querySelectorAll(".order-card").forEach(card => {
+            card.addEventListener("click", () => {
+                openDrawer(Number(card.dataset.orderId));
+            });
+        });
+
+
+        setInterval(() => {
+            fetch("/kitchen")
+                .then(() => location.reload());
+        }, 20000);
+
+
+        function cancelItem(itemName, orderId) {
+
+            fetch("/order/cancel-item", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    order_id: orderId,
+                    item_name: itemName
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+
+                    if (data.success) {
+                        alert("Item cancelled");
+                        location.reload();
+                    } else {
+                        alert(data.msg);
+                    }
+
+                });
+
+        }
+
+    </script>
+
+</body>
+
+</html>

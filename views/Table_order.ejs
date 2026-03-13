@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table Management</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #f4f6f9;
+            --surface: #ffffff;
+            --border: #e5e7eb;
+            --text: #111827;
+            --muted: #6b7280;
+            --green: #22c55e;
+            --orange: #f59e0b;
+            --red: #ef4444;
+            --blue: #3b82f6;
+            --shadow: 0 6px 14px rgba(0, 0, 0, .08);
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .header {
+            padding: 18px 26px;
+            font-size: 20px;
+            font-weight: 600;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .legend-bar {
+            display: flex;
+            gap: 16px;
+            padding: 10px 26px;
+            font-size: 13px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .legend-bar span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .dot.green {
+            background: var(--green)
+        }
+
+        .dot.orange {
+            background: var(--orange)
+        }
+
+        .dot.red {
+            background: var(--red)
+        }
+
+        .dot.blue {
+            background: var(--blue)
+        }
+
+        .grid {
+            padding: 28px;
+            display: grid;
+            gap: 22px;
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        @media(min-width:768px) {
+            .grid {
+                grid-template-columns: repeat(4, 1fr)
+            }
+        }
+
+        @media(min-width:1200px) {
+            .grid {
+                grid-template-columns: repeat(5, 1fr)
+            }
+        }
+
+        .table-card {
+            background: var(--surface);
+            box-shadow: var(--shadow);
+            border-radius: 18px;
+            padding: 18px 14px 14px;
+            position: relative;
+            transition: .25s ease;
+            cursor: pointer;
+        }
+
+        .table-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 14px 30px rgba(0, 0, 0, .5);
+        }
+
+        .status-strip {
+            height: 6px;
+            width: 100%;
+            border-radius: 6px 6px 0 0;
+            margin-bottom: 12px;
+        }
+
+        .status-strip.available {
+            background: var(--green)
+        }
+
+        .status-strip.yet {
+            background: var(--orange)
+        }
+
+        .status-strip.occupied {
+            background: var(--red)
+        }
+
+        .status-strip.cleaning {
+            background: var(--blue)
+        }
+
+        .status-badge {
+            display: inline-block;
+            margin-bottom: 10px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .status-badge.available {
+            background: rgba(34, 197, 94, .15);
+            color: var(--green)
+        }
+
+        .status-badge.yet {
+            background: rgba(245, 158, 11, .15);
+            color: var(--orange)
+        }
+
+        .status-badge.occupied {
+            background: rgba(239, 68, 68, .15);
+            color: var(--red)
+        }
+
+        .status-badge.cleaning {
+            background: rgba(59, 130, 246, .15);
+            color: var(--blue)
+        }
+
+        .table-img {
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+            border-radius: 14px;
+            margin: 10px 0;
+        }
+
+        .table-img i {
+            font-size: 40px;
+            color: #6b7280;
+        }
+
+        .table-no {
+            text-align: center;
+            font-size: 15px;
+            font-weight: 600;
+            margin-top: 6px;
+        }
+
+        .person-select {
+            width: 100%;
+            background: #fff;
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 6px 8px;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .locked {
+            opacity: .6;
+            pointer-events: none;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 22px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">🍽 Table Management</div>
+
+    <div class="legend-bar">
+        <span><i class="dot green"></i> Available</span>
+        <span><i class="dot orange"></i> Yet to order</span>
+        <span><i class="dot red"></i> Occupied</span>
+        <span><i class="dot blue"></i> Cleaning</span>
+    </div>
+
+
+    <div class="grid">
+
+        <% tables.forEach(table=> { %>
+
+            <form method="POST" action="/table_order" class="table-form" id="form-<%= table.id %>">
+
+                <input type="hidden" name="table_id" value="<%= table.id %>">
+                <input type="hidden" name="persons" value="<%= table.persons %>" id="persons-<%= table.id %>">
+
+                <div class="table-card <%= table.state %>" onclick="submitTable('<%= table.id %>', event)">
+
+                    <div class="status-strip <%= table.state %>"></div>
+
+                    <span class="status-badge <%= table.state %>">
+                        <%= table.state.charAt(0).toUpperCase() + table.state.slice(1) %>
+                    </span>
+
+                    <select
+                        class="person-select <%= (table.state === 'occupied' || table.state === 'cleaning') ? 'locked' : '' %>"
+                        <% if(table.state !=='occupied' && table.state !=='cleaning' ){ %>
+                        onchange="updatePersonsValue(<%= table.id %>, this.value)"
+                            <% } %>
+                                >
+
+                                <% for(let n=0; n <= table.capacity; n++){ %>
+
+                                    <option value="<%= n %>" <%=n===table.persons ? 'selected' : '' %>>
+                                        Persons: <%= n %>
+                                    </option>
+
+                                    <% } %>
+
+                    </select>
+
+                    <div class="table-img">
+                        <i class="fa-solid fa-chair"></i>
+                    </div>
+
+                    <div class="table-no">
+                        Table <%= table.id %>
+                    </div>
+
+                </div>
+
+            </form>
+
+            <% }) %>
+
+    </div>
+
+
+    <div class="footer">
+        VEDSP Inventive Private Limited © 2025 Restaurant Management System
+    </div>
+
+
+    <script>
+
+        function updatePersonsValue(tableId, value) {
+
+            document.getElementById(`persons-${tableId}`).value = value;
+
+            const table = document.getElementById(`form-${tableId}`).querySelector('.table-card');
+            const badge = table.querySelector('.status-badge');
+            const strip = table.querySelector('.status-strip');
+
+            value = parseInt(value);
+
+            if (table.classList.contains('occupied') || table.classList.contains('cleaning')) {
+                return;
+            }
+
+            if (value === 0) {
+
+                table.className = 'table-card available';
+                badge.className = 'status-badge available';
+                badge.textContent = 'Available';
+                strip.className = 'status-strip available';
+
+            } else {
+
+                table.className = 'table-card yet';
+                badge.className = 'status-badge yet';
+                badge.textContent = 'Yet to order';
+                strip.className = 'status-strip yet';
+
+            }
+
+        }
+
+
+        function submitTable(tableId, event) {
+
+            if (event.target.tagName.toLowerCase() === 'select') return;
+
+            const form = document.getElementById(`form-${tableId}`);
+            const persons = parseInt(document.getElementById(`persons-${tableId}`).value);
+
+            const tableCard = form.querySelector('.table-card');
+
+            const isOccupied = tableCard.classList.contains('occupied');
+            const isCleaning = tableCard.classList.contains('cleaning');
+
+            if (persons === 0 && !isOccupied && !isCleaning) {
+                return;
+            }
+
+            form.submit();
+
+        }
+
+    </script>
+
+</body>
+
+</html>

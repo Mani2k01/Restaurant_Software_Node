@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Food Manager</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #f4f6f9;
+            --surface: #ffffff;
+            --border: #e5e7eb;
+            --text: #111827;
+            --muted: #6b7280;
+            --green: #22c55e;
+            --shadow: 0 6px 14px rgba(0, 0, 0, .08);
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .header {
+            padding: 18px 26px;
+            font-size: 20px;
+            font-weight: 600;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .wrapper {
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .card {
+            background: var(--surface);
+            box-shadow: var(--shadow);
+            border-radius: 18px;
+            padding: 28px;
+            width: 360px;
+        }
+
+        .icon {
+            text-align: center;
+            font-size: 38px;
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 14px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 6px;
+            color: var(--muted);
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--green);
+        }
+
+        .checkbox{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            margin:12px 0;
+            font-size:14px;
+            color:var(--muted);
+        }
+
+        .checkbox input{
+            width:auto;
+        }
+
+        button {
+            margin-top: 10px;
+            width: 100%;
+            padding: 11px;
+            border: none;
+            border-radius: 10px;
+            background: var(--green);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: .9;
+        }
+
+        /* FOOTER */
+        .footer {
+            text-align: center;
+            padding: 22px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">🍽 Food Manager</div>
+
+    <div class="wrapper">
+
+        <div class="card">
+
+            <div class="icon">
+                <i class="fa-solid fa-burger"></i>
+            </div>
+
+            <div class="title">Add / Update Food Item</div>
+
+            <form id="foodForm" method="POST" action="/add_food">
+
+                <div class="input-group">
+                    <label>Food Name</label>
+                    <input type="text" id="name" placeholder="Masala Dosa">
+                </div>
+
+                <div class="input-group">
+                    <label>Price</label>
+                    <input type="number" id="price" placeholder="120">
+                </div>
+
+                <div class="input-group">
+                    <label>Category</label>
+                    <input type="text" id="category" placeholder="South Indian">
+                </div>
+
+                <div class="input-group">
+                    <label>Veg / Non Veg</label>
+                    <select id="veg">
+                        <option value="true">Veg</option>
+                        <option value="false">Non Veg</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Image URL</label>
+                    <input type="text" id="img" placeholder="Image URL">
+                </div>
+
+                <div class="checkbox">
+                <label>
+                    <input type="checkbox" id="popular">
+                        Popular Item
+                    </label>
+                </div>
+
+                <button type="submit">
+                    <i class="fa-solid fa-plus"></i> Save Food Item
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <div class="footer">
+        VEDSP Inventive Private Limited © 2026 Restaurant Management System
+    </div>
+
+    
+    <script>
+
+        document.getElementById("foodForm").addEventListener("submit", async function (e) {
+
+        e.preventDefault();
+
+        const item = {
+            name: document.getElementById("name").value,
+            price: parseInt(document.getElementById("price").value),
+            veg: document.getElementById("veg").value === "true",
+            category: document.getElementById("category").value,
+            popular: document.getElementById("popular").checked,
+            img: document.getElementById("img").value
+        };
+
+        const res = await fetch("/add_food", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(item)
+        });
+
+        const data = await res.json();
+
+        console.log(data);
+
+        alert("Food Item Added");
+
+        this.reset();
+    });
+
+    </script>
+
+</body>
+
+</html>
