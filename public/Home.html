@@ -203,6 +203,9 @@
             <div onclick="go('add_food')">
                 <i class="fa-solid fa-burger"></i> Add Food Item
             </div>
+            <div onclick="go('food_items')">
+                <i class="fa-solid fa-pencil"></i> Edit Food Item
+            </div>
         </div>
     </div>
 
@@ -275,6 +278,9 @@
             }
             if (role == 'add_table') {
                 window.location.href = "/add_table"
+            }
+            if (role == 'food_items') {
+                window.location.href = "/food_items"
             }
 
         }

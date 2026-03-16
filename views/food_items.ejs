@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Table Order</title>
+        <title>Food Items</title>
 
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
@@ -444,27 +444,35 @@
             .qty button:hover {
                 background: #d1d5db;
             }
+
+            /* FOOTER */
+            .footer {
+                text-align: center;
+                padding: 22px;
+                font-size: 13px;
+                color: var(--muted);
+            }
+
         </style>
     </head>
 
     <body>
 
         <div class="header">
-            🧾 Table-order
+            🧾 Food-Items
             <input class="search" placeholder="Search food">
         </div>
-        <div class="table-status-bar">
-            <div class="table-info">
-                <span class="table-no">Table <%= order.table %></span>
-                <span class="table-state occupied" id="tableStateText"><%= order.status %></span>
-            </div>
 
-            <div class="table-actions">
-                <button class="btn available" onclick="setAvailable()">✅ Set Available</button>
-            </div>
-        </div>
+        <form action="/food_items" method="post" onsubmit="return validateOrder()">
 
-        <form action="/order_entry" method="post" onsubmit="return validateOrder()">
+            <input type="hidden" name="id" id="food_id">
+            <input type="hidden" name="img" id="food_img">
+            <input type="hidden" name="name" id="food_name">
+            <input type="hidden" name="price" id="food_price">
+            <input type="hidden" name="veg" id="food_veg">
+            <input type="hidden" name="popular" id="food_popular">
+            <input type="hidden" name="category" id="food_category">
+            
             <div class="layout">
 
                 <div class="sidebar">
@@ -479,232 +487,45 @@
 
                 <div class="menu">
                     <% foods.forEach(function(food) { %>
-                    <div class="food"
-                        data-name="<%= food.name %>"
-                        data-price="<%= food.price %>"
-                        data-veg="<%= food.veg ? 'veg' : 'nonveg' %>"
-                        data-category="<%= food.category %>">
+                        
+                        <div class="food"
+                            data-id="<%= food.id %>"
+                            data-img="<%= food.food_item.img %>"
+                            data-name="<%= food.food_item.name %>"
+                            data-price="<%= food.food_item.price %>"
+                            data-veg="<%= food.food_item.veg %>"
+                            data-popular="<%= food.food_item.popular %>"
+                            data-category="<%= food.food_item.category %>">
 
-                        <img src="<%= food.img %>" alt="<%= food.name %>">
+                            <img src="<%= food.food_item.img %>" alt="<%= food.food_item.name %>">
 
-                        <div class="food-body">
-                            <div class="food-name">
-                                <%= food.name %>
-                                <% if (food.popular) { %>
-                                <i class="fa-solid fa-star star"></i>
-                                <% } %>
-                            </div>
+                            <div class="food-body">
+                                <div class="food-name">
+                                    <%= food.food_item.name %>
+                                    <% if (food.food_item.popular) { %>
+                                    <i class="fa-solid fa-star star"></i>
+                                    <% } %>
+                                </div>
 
-                            <div class="meta">
-                                <div class="food-price">₹<%= food.price %></div>
-                                <div class="veg <%= !food.veg ? 'nonveg' : '' %>"></div>
-                            </div>
-
-                            <div class="qty">
-                                <button type="button" onclick="chg(this,-1)">−</button>
-                                <span>0</span>
-                                <button type="button" onclick="chg(this,1)">+</button>
+                                <div class="meta">
+                                    <div class="food-price">₹<%= food.food_item.price %></div>
+                                    <div class="veg <%= !food.food_item.veg ? 'nonveg' : '' %>"></div>
+                                </div>
                             </div>
                         </div>
-                    </div>
                     <% }); %>
                 </div>
 
             </div>
         
-
-            <div class="cart-bar">
-                <div>Total ₹0</div>
-                <button type="button" onclick="openDrawer()">View Order</button>
-            </div>
-
-            <div class="drawer" id="drawer">
-                <div class="drawer-header">
-                    Current Order
-                    <button type="button" onclick="closeDrawer()">✕</button>
-                </div>
-
-                <div class="drawer-body">
-
-                    <div style="margin-bottom:12px;">
-                        <label style="font-weight:600; font-size:13px;">Order Name / Customer</label>
-                        <input 
-                            id="orderName"
-                            type="text"
-                            placeholder="Eg: Table <%= order.table %> - Ramesh"
-                            style="
-                                width:100%;
-                                padding:10px;
-                                margin-top:6px;
-                                border-radius:10px;
-                                border:1px solid #e5e7eb;
-                                font-size:14px;
-                            "
-                            name="order_name"
-                            value="<%= typeof order_person !== 'undefined' ? order_person : '' %>"
-                        >
-                        <input type="hidden" name="order_data" id="orderData">
-                        <input type="hidden" name="table_no" value="<%= order.table %>">
-                    </div>
-
-                    <div id="orderItems">
-                        Selected items will appear here
-                    </div>
-
-                </div>
-
-
-                <div class="drawer-total">
-                    <span>Total</span>
-                    <strong>₹<span id="drawerTotal">0</span></strong>
-                </div>
-
-                <div class="drawer-footer">
-                    <button class="confirm" type="submit" name="action" value="submit">Confirm Order</button>
-                    <button class="confirm" type="submit" name="action" onclick="openBillPreview()">Print Bill</button>
-                    <button class="pay" type="submit" name="action" value="pay">Pay Bill</button>
-                </div>
-            </div>
-
-            <div class="drawer" id="billDrawer">
-
-                <div class="drawer-header">
-                    Bill Preview
-                    <button type="button" onclick="closeBillDrawer()">✕</button>
-                </div>
-
-                <div class="drawer-body">
-                    <pre id="billContent" style="
-                        background:#f9fafb;
-                        padding:14px;
-                        border-radius:10px;
-                        font-family:monospace;
-                        font-size:14px;
-                    "></pre>
-                </div>
-
-                <div class="drawer-footer">
-                    <button class="confirm" onclick="printbill()">Print Bill</button>
-                    <button onclick="closeBillDrawer()">Cancel</button>
-                </div>
-
-            </div>
-
         </form>
 
-        <script id="active-order" type="application/json">
-            <%- JSON.stringify(active_order || {}) %>
-        </script>
+        <div class="footer">
+            VEDSP Inventive Private Limited © 2026 Restaurant Management System
+        </div>
 
-        <script id="order-config" type="application/json">
-            {
-                "isConfirmed": <%= typeof order_id !== 'undefined' && order_id !== null %>,
-                "orderId": <%- JSON.stringify(typeof order_id !== 'undefined' ? order_id : null) %>
-            }
-        </script>
-
-        <script id="currenttable" type="application/json">
-            <%- JSON.stringify(order.table) %>
-        </script>
 
         <script>
-            const order = JSON.parse(document.getElementById("active-order").textContent);
-            let orderName = "";
-
-            const config = JSON.parse(
-                document.getElementById("order-config").textContent
-            );
-
-            const isConfirmed = config.isConfirmed;
-            const orderId = config.orderId;
-
-            const currenttable = JSON.parse(document.getElementById("currenttable").textContent);
-            console.log("Current Table ID:", currenttable);
-
-            function chg(btn, delta) {
-                const card = btn.closest(".food");
-                const name = card.dataset.name;
-                const price = parseInt(card.dataset.price);
-                const qtySpan = btn.parentElement.querySelector("span");
-
-                let qty = parseInt(qtySpan.innerText);
-                qty = Math.max(0, qty + delta);
-                qtySpan.innerText = qty;
-
-                if (qty === 0) {
-                    delete order[name];
-                } else {
-                    order[name] = {
-                        qty: qty,
-                        price: price,
-                        total: qty * price
-                    };
-                }
-
-                updateCart();
-            }
-
-            function updateCart() {
-                let total = 0;
-                let html = "";
-
-                for (let item in order) {
-                    if (order[item].status && order[item].status === "CANCELLED") continue;
-                    total += order[item].total;
-
-                    html += `
-                        <div style="
-                            display:flex;
-                            justify-content:space-between;
-                            align-items:center;
-                            padding:8px 0;
-                            border-bottom:1px dashed #e5e7eb;
-                        ">
-                            <div>
-                                <strong>${item}</strong><br>
-                                <small>₹${order[item].price} × ${order[item].qty}</small>
-                            </div>
-
-                            <div style="display:flex; align-items:center; gap:10px;">
-                                <strong>₹${order[item].total}</strong>
-                                <button 
-                                    type="button"
-                                    onclick="${
-                                        isConfirmed
-                                            ? `cancelConfirmedItem('${item}', ${orderId})`
-                                            : `cancelItem('${item}')`
-                                    }"
-                                    style="
-                                        background:#fee2e2;
-                                        border:none;
-                                        color:#991b1b;
-                                        border-radius:8px;
-                                        padding:6px 8px;
-                                        cursor:pointer;
-                                    "
-                                    title="Cancel item"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                }
-
-                document.querySelector(".cart-bar div").innerText = `Total ₹${total}`;
-                document.getElementById("orderItems").innerHTML = html || "No items selected";
-                document.getElementById("drawerTotal").innerText = total;
-
-                // send to backend
-                document.getElementById("orderData").value = JSON.stringify(order);
-            }
-            function openDrawer() {
-                document.getElementById("drawer").classList.add("open");
-            }
-
-            function closeDrawer() {
-                document.getElementById("drawer").classList.remove("open");
-            }
             
             // for filter wise category
             const cats = document.querySelectorAll(".cat");
@@ -742,149 +563,24 @@
                 });
             });
 
-            // for order body with name 
-            document.addEventListener("input", function (e) {
-                if (e.target.id === "orderName") {
-                    orderName = e.target.value.trim();
-                }
+            // for edit food item - prefill form and submit
+            document.querySelectorAll(".food").forEach(card => {
+
+            card.addEventListener("click", function(){
+                document.getElementById("food_id").value = this.dataset.id;
+                document.getElementById("food_img").value = this.dataset.img;
+                document.getElementById("food_name").value = this.dataset.name;
+                document.getElementById("food_price").value = this.dataset.price;
+                document.getElementById("food_veg").value = this.dataset.veg;
+                document.getElementById("food_popular").value = this.dataset.popular;
+                document.getElementById("food_category").value = this.dataset.category;
+
+                document.querySelector("form").submit();
+
             });
 
-            // on order submit
-            function validateOrder() {
-                if (Object.keys(order).length === 0) {
-                    alert("Please select at least one item");
-                    return false;
-                }
+        });
 
-                const name = document.getElementById("orderName").value.trim();
-                if (!name) {
-                    alert("Please enter Order Name / Customer");
-                    document.getElementById("orderName").focus();
-                    return false;
-                }
-
-                return true;
-            }
-
-            window.onload = updateCart;
-
-            function cancelItem(itemName) {
-                delete order[itemName];
-
-                // reset qty in food card
-                document.querySelectorAll(".food").forEach(food => {
-                    if (food.dataset.name === itemName) {
-                        food.querySelector(".qty span").innerText = "0";
-                    }
-                });
-
-                updateCart();
-            }
-
-            function cancelConfirmedItem(itemName, orderId) {
-                if (!confirm(`Cancel ${itemName}?`)) return;
-
-                fetch("/order/cancel-item", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        order_id: orderId,
-                        item_name: itemName,
-                        table_id: currenttable 
-                    })
-                })
-                .then(r => r.json())
-                .then(res => {
-                    if (res.success) {
-                        alert("Item cancelled");
-                        location.reload();   
-                    } else {
-                        alert(res.msg);
-                    }
-                });
-            }
-
-
-
-            function setAvailable() {
-                const tableId = currenttable;
-
-                fetch("/table/set-available", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ table_id: tableId })
-                })
-                .then(r => r.json())
-                .then(res => {
-                    if (res.success) {
-                        alert("Table marked as available ✅");
-                        // Update UI
-                        const stateText = document.getElementById("tableStateText");
-                        stateText.innerText = res.new_status;
-                        stateText.classList.remove("occupied", "cleaning");
-                        stateText.classList.add("available");
-                    } else {
-                        alert(res.msg || "Failed to update table");
-                    }
-                });
-            }
-
-            //  for bill preview drawer
-            function openBillPreview(){
-
-                fetch("/order/get-bill-preview",{
-                    method:"POST",
-                    headers:{
-                        "Content-Type":"application/json"
-                    },
-                    body: JSON.stringify({
-                        table_id: currenttable
-                    })
-                })
-                .then(res => res.json())
-                .then(data => {
-
-                    if(!data.success){
-                        alert(data.msg || "Unable to generate bill");
-                        return;
-                    }
-
-                    document.getElementById("billContent").innerText = data.bill;
-
-                    document.getElementById("billDrawer").classList.add("open");
-
-                })
-            }
-
-            function closeBillDrawer(){
-                document.getElementById("billDrawer").classList.remove("open");
-            }
-
-            function printbill(){
-
-                fetch("/order/print-bill",{
-                    method:"POST",
-                    headers:{
-                        "Content-Type":"application/json"
-                    },
-                    body: JSON.stringify({
-                        table_id: currenttable
-                    })
-                })
-                .then(res=>res.json())
-                .then(data=>{
-
-                    if(data.success){
-                        alert("Bill saved to Downloads");
-                        closeBillDrawer();
-                    }
-                    else{
-                        alert(data.msg || "Bill generation failed");
-                    }
-
-                })
-
-            }
 
         </script>
 

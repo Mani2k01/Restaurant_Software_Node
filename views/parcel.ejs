@@ -586,9 +586,35 @@
 
         <div class="drawer-footer">
             <button class="confirm" type="submit" name="action" value="submit">Confirm Order</button>
+            <button class="confirm" type="button" onclick="openBillPreview()">Print Bill</button>
             <button class="pay" type="submit" name="action" value="pay">Pay Bill</button>
         </div>
     </div>
+
+
+    <div class="drawer" id="billDrawer">
+
+                <div class="drawer-header">
+                    Bill Preview
+                    <button type="button" onclick="closeBillDrawer()">✕</button>
+                </div>
+
+                <div class="drawer-body">
+                    <pre id="billContent" style="
+                        background:#f9fafb;
+                        padding:14px;
+                        border-radius:10px;
+                        font-family:monospace;
+                        font-size:14px;
+                    "></pre>
+                </div>
+
+                <div class="drawer-footer">
+                    <button class="confirm" onclick="printbill()">Print Bill</button>
+                    <button onclick="closeBillDrawer()">Cancel</button>
+                </div>
+
+            </div>
 </form>
 
 
@@ -723,6 +749,51 @@
                 }
             });
         };
+
+        //  for bill preview drawer
+            function openBillPreview(){
+
+                fetch("/parcel/get-bill-preview",{
+                    method:"POST",
+                })
+                .then(res => res.json())
+                .then(data => {
+
+                    if(!data.success){
+                        alert(data.msg || "Unable to generate bill");
+                        return;
+                    }
+
+                    document.getElementById("billContent").innerText = data.bill;
+
+                    document.getElementById("billDrawer").classList.add("open");
+
+                })
+            }
+
+            function closeBillDrawer(){
+                document.getElementById("billDrawer").classList.remove("open");
+            }
+
+            function printbill(){
+
+                fetch("/parcel/print-bill",{
+                    method:"POST"
+                })
+                .then(res=>res.json())
+                .then(data=>{
+
+                    if(data.success){
+                        alert("Bill saved to Downloads");
+                        closeBillDrawer();
+                    }
+                    else{
+                        alert(data.msg || "Bill generation failed");
+                    }
+
+                })
+
+            }
 
     </script>
 

@@ -124,10 +124,8 @@ app.route("/order_entry")
         }
 
         // Fetch food items from DB
-        const query = "SELECT food_item FROM food_items ";
-        const result = await db.fetch_all_data(query);
+        const foods = await fetch_food_items();
 
-        const foods = result.map(row => row.food_item);
         // console.log("Fetched food items:", foods);
         console.log("order id after confirm order, fetched from session : ", req.session.order_id);
         console.log("order id after confirm order : ", order_id);
@@ -210,7 +208,7 @@ app.route("/order_entry")
             }
 
             else if (action === "pay") {
-
+                console.log("Pay route called");
                 const current = orders_by_table[table_id];
 
                 if (!current) {
@@ -248,10 +246,8 @@ app.route("/order_entry")
 app.route("/parcel")
     .get(async (req, res) => {
 
-        const query = "SELECT food_item FROM food_items";
-        const result = await db.fetch_all_data(query);
-
-        const foods = result.map(row => row.food_item);
+        // Fetch food items from DB
+        const foods = await fetch_food_items();
 
         const parcel = req.session.parcel_order || null;
         console.log(" fetched parcel order session:", parcel);
@@ -667,6 +663,16 @@ app.post("/table/set-available", async (req, res) => {
 
 });
 
+app.get("/reset-system", (req, res) => {
+
+    req.session.orders_by_table = {};
+    req.session.current_table = null;
+    req.session.parcel_order = null;
+    req.session.order_id = null;
+
+    res.send("Restaurant session reset");
+
+});
 
 app.route("/add_table")
     .get((req, res) => {
@@ -705,6 +711,180 @@ app.route("/add_food")
         }
     });
 
+
+app.route("/food_items")
+    .get(async (req, res) => {
+        // Fetch food items from DB
+        const query = "SELECT * FROM food_items ";
+        const result = await db.fetch_all_data(query);
+        console.log("Fetched food items:", result);
+        res.render("food_items", { foods: result });
+    })
+    .post(async (req, res) => {
+        const food = {
+            id: req.body.id,
+            img: req.body.img,
+            name: req.body.name,
+            price: req.body.price,
+            veg: req.body.veg === "true",
+            popular: req.body.popular === "true",
+            category: req.body.category
+        };
+        // console.log("Received POST request to /food_items with data:", food);
+        req.session.selected_food = food;
+
+        res.redirect("/edit_food");
+
+    });    
+
+app.route("/edit_food")
+    .get(async (req, res) => {
+        console.log("Received GET request to /edit_food");
+        const food = req.session.selected_food;
+        console.log("Selected food from session:", food);
+        res.render("edit_food",{ food });
+    })
+    .post(async (req, res) => {
+        console.log("Received POST request to /add_food ");
+        const food_item = {
+            // id: req.body.id,
+            img: req.body.img,
+            name: req.body.name,
+            price: req.body.price,
+            veg: req.body.veg === true || req.body.veg === "true",
+            popular: req.body.popular === true || req.body.popular === "true",
+            category: req.body.category
+        };
+         const id = parseInt(req.body.id);
+        console.log("Food data to update:", food_item, id);
+        const query = "UPDATE food_items SET food_item = $1 WHERE id = $2";
+        const values = [JSON.stringify(food_item),  id];
+        const result = await db.update_data(query, values);
+        if (result) {
+            return res.json({ success: true, message: "Food item updated successfully" });
+        } else {
+            return res.status(500).json({ success: false, message: "Failed to update food item" });
+        }
+    });    
+
+
+
+app.post("/order/get-bill-preview", async (req,res)=>{
+
+    const table_id = req.body.table_id;
+    const orders_by_table = req.session.orders_by_table || {};
+
+    const current = orders_by_table[table_id];
+
+    if(!current){
+        return res.json({
+            success:false,
+            msg:"No active order"
+        });
+    }
+
+    const billtext = billPDF.generateBill(current, table_id, "TABLE");
+
+    res.json({
+        success:true,
+        bill: billtext
+    });
+
+});
+
+
+app.post("/parcel/get-bill-preview", (req, res) => {
+
+    const parcel = req.session.parcel_order;
+
+    if (!parcel) {
+        return res.json({
+            success:false,
+            msg:"No parcel order found"
+        });
+    }
+
+    const billtext = billPDF.generateBill(parcel, parcel.order_id, "PARCEL");
+
+    res.json({
+        success:true,
+        bill: billtext
+    });
+
+});
+
+app.post("/order/print-bill", async (req,res)=>{
+
+    const table_id = req.body.table_id;
+    const orders_by_table = req.session.orders_by_table || {};
+
+    const current = orders_by_table[table_id];
+
+    if(!current){
+        return res.json({
+            success:false,
+            msg:"No order found"
+        });
+    }
+
+    try{
+
+        const billtext = billPDF.generateBill(current, table_id, "TABLE");
+
+        await billPDF.saveBillPDF(billtext, table_id);
+
+        res.json({
+            success:true
+        });
+
+    }
+    catch(err){
+
+        console.log(err);
+
+        res.json({
+            success:false,
+            msg:"PDF generation failed"
+        });
+
+    }
+
+});
+
+app.post("/parcel/print-bill", async (req,res)=>{
+
+    const parcel = req.session.parcel_order;
+
+    if(!parcel){
+        return res.json({
+            success:false,
+            msg:"No parcel order found"
+        });
+    }
+
+    try{
+
+        const billtext = billPDF.generateBill(parcel, parcel.order_id, "PARCEL");
+
+        await billPDF.saveBillPDF(billtext, parcel.order_id);
+
+        res.json({
+            success:true
+        });
+
+    }
+    catch(err){
+
+        console.log(err);
+
+        res.json({
+            success:false,
+            msg:"PDF generation failed"
+        });
+
+    }
+
+});
 
 async function fetch_table_status() {
 
@@ -745,7 +925,7 @@ async function insert_data(tableCount) {
 
 async function fetch_orders() {
 
-    const query = "SELECT * FROM food_order WHERE order_status != 'DISTRIBUTED'";
+    const query = "SELECT * FROM food_order WHERE order_status NOT IN ('DISTRIBUTED', 'PAID') ";
 
     const result = await db.fetchdatawithoutvalue(query);
 
@@ -811,6 +991,14 @@ async function can_pay_order(order_id) {
     const result = await db.fetch_all_data(query, [order_id]);
 
     return result && result.length > 0 && result[0].order_status === "DISTRIBUTED";
+}
+
+async function fetch_food_items() {
+    const query = "SELECT food_item FROM food_items ";
+        const result = await db.fetch_all_data(query);
+
+        const foods = result.map(row => row.food_item);
+        return foods;   
 }
 
 app.listen(PORT, "0.0.0.0", () => {
