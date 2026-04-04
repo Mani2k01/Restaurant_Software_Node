@@ -4,6 +4,7 @@ const path = require("path");
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const Database = require("./db");
+const CLOUD_DB = require("./cloud_db");
 const pdfBill = require("./bill_pdf");
 // const Printer = require("./printer");
 // const NetworkPrinter = require("./printer_ip");
@@ -29,6 +30,7 @@ app.use((req, res, next) => {
 });
 
 const db = new Database();
+const cloud_db = new CLOUD_DB();
 const billPDF = new pdfBill();
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -278,7 +280,6 @@ app.route("/parcel")
                 req.session.order_name = order_name;
 
                 const raw_mode = (req.body.order_mode || "").toUpperCase();
-
                 const order_type = raw_mode === "ONLINE" ? "ONLINE" : "PARCEL";
 
                 console.log("order type:", order_type);
@@ -291,6 +292,7 @@ app.route("/parcel")
                     INSERT INTO food_order
                     (name, order_amount, order_items, order_type, delivery_address)
                     VALUES ($1,$2,$3,$4,$5)
+                    RETURNING order_id
                 `;
 
                 const values = [
@@ -301,21 +303,42 @@ app.route("/parcel")
                     address
                 ];
 
-                const result = await db.insert_data(query, values);
+                const result = await db.fetch_data(query, values);
 
-                if (result) {
+                if (result && result.length > 0) {
 
-                    const orderResult = await db.fetch_data(
-                        `SELECT order_id 
-                        FROM food_order 
-                        WHERE table_id=$1 
-                        AND order_status!='DISTRIBUTED'
-                        ORDER BY order_id DESC 
-                        LIMIT 1`,
-                        [parcel_id]
-                    );
+                    const order_id = result[0].order_id;
 
-                    const order_id = orderResult[0]?.order_id;
+                    // 🔥 PUSH TO CLOUD DB ONLY IF ONLINE ORDER
+                    if (order_type === "ONLINE") {
+
+                        const cloud_query = `
+                            INSERT INTO food_order
+                            (order_id, name, order_amount, order_items, order_type, delivery_address)
+                            VALUES ($1,$2,$3,$4,$5,$6)
+                        `;
+
+                        const cloud_values = [
+                            order_id,
+                            order_name,
+                            order_total,
+                            order_items_json,
+                            order_type,
+                            address
+                        ];
+
+                        try {
+
+                            await cloud_db.insert_data(cloud_query, cloud_values);
+
+                            console.log("☁ Order pushed to cloud:", order_id);
+
+                        } catch (cloudErr) {
+
+                            console.error("Cloud DB push failed:", cloudErr);
+
+                        }
+                    }
 
                     req.session.js_alert = "Order Placed Successfully";
 
@@ -326,13 +349,19 @@ app.route("/parcel")
                         total: order_total,
                         status: "OPEN"
                     };
+
                     console.log("parcel order session set:", req.session.parcel_order);
-                    const billtext = billPDF.generateBill(req.session.parcel_order, parcel_id, "PARCEL");
+
+                    const billtext = billPDF.generateBill(
+                        req.session.parcel_order,
+                        parcel_id,
+                        "PARCEL"
+                    );
+
                     await billPDF.saveBillPDF(billtext, parcel_id);
 
                     return res.redirect("/parcel");
                 }
-
             }
 
             else if (action === "pay") {
